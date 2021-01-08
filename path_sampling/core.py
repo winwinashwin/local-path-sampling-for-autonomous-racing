@@ -67,8 +67,7 @@ def slope_of_segment(point1: PVector, point2: PVector):
 def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom):
     """Find point of intersection of line and cubic.
 
-    Args:We can do a polyfit on global path and find slope
-
+    Args:
         line (Line_SI): Straight line in slope-intercept form
         coeffs (RoadLinePolynom): Structure holding cubic approximation
                                   of track boundaries.
@@ -77,35 +76,24 @@ def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom):
         PVector: point of intersection
 
     """
-    try:
-        # Line is of the form y = m * x + c
-        # Cubic is of the form y = c3 * x**3 + c2 * x**2 + c1 * x + c0
-        #
-        # To solve, find roots of cubic:
-        # y = c3 * x**3 + c2 * x**2 + (c1 - m) * x + (c0 - c)
-        xs = np.roots([
-            coeffs.c3,
-            coeffs.c2,
-            coeffs.c1 - line.m,
-            coeffs.c0 - line.c
-        ])
-    except Exception:
-        msg = 'Error in computing intersection - Line and Cubic'
-        _logger.critical(msg, exc_info=True)
-        # TODO: add recovery routines/logic
-        xs = np.empty()
+    # Line is of the form y = m * x + c
+    # Cubic is of the form y = c3 * x**3 + c2 * x**2 + c1 * x + c0
+    #
+    # To solve, find roots of cubic:
+    # y = c3 * x**3 + c2 * x**2 + (c1 - m) * x + (c0 - c)
+    fx = [coeffs.c3, coeffs.c2, coeffs.c1 - line.m, coeffs.c0 - line.c]
+    roots = np.roots(fx)
+    
+    real_roots = np.where(np.isreal(roots))
+    if len(real_roots) == 1:
+        # One real root and two complex roots (conjugates)
+        root = roots[real_roots[0][0]].real
+    else:
+        # TODO: add logic for three real roots
+        _logger.warning("Got three real roots")
+        root = roots[real_roots[0][0]].real
 
-    resx = 0.0
-    # Ouf of obtained roots, one is a pure real number, rest two are
-    # complex conjugates (or all three real roots, rarely in our case)
-
-    # TODO: add logic for three real roots
-    for x in xs:
-        if x.imag == 0:
-            resx = x.real
-            break
-
-    return PVector(resx, line.m * resx + line.c)
+    return PVector(root, line.m * root + line.c)
 
 
 def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0):
@@ -158,7 +146,7 @@ def polyeval(x, coeffs):
     """
     y = 0.0
     for i, c in enumerate(coeffs):
-        y += c * x ** i
+        y += c * (x ** i)
     return y
 
 
