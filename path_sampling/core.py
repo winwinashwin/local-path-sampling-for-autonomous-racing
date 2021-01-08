@@ -36,7 +36,7 @@ def linalg_solve(a: np.ndarray, b: np.ndarray):
         x = np.linalg.solve(a, b)
 
     except np.linalg.LinAlgError:
-        msg = 'Matrix in singular, proceeding with pseudo-inverse instead'
+        msg = 'Matrix is singular, proceeding with pseudo-inverse instead'
         _logger.warning(msg)
 
         a_inv = np.linalg.pinv(a)
