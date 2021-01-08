@@ -58,6 +58,7 @@ def slope_of_segment(point1: PVector, point2: PVector):
     """
     if point1.x == point2.x:
         slope = float('inf')
+        _logger.warning("Slope calculation returning `inf`")
     else:
         slope = (point2.y - point1.y) / (point2.x - point1.x)
     return slope
