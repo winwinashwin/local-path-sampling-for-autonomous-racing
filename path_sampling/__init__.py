@@ -1,28 +1,36 @@
 """Package for local path sampling."""
 
-# Core logic
-#
-# Inputs - Global path, Track limits and ego pose (minimum x, y and yaw), N
-# Output - N feasible local path samples to for furthur processing
-#
-# Core logic:
-# - Find index of closest point in global path to the ego vehicle position.
-# - At some lookahead indices ahead, drop a perpendicular to global path.
-# - Find intersection of perpendicular with track boundaries (say p1 and p2)
-# - Sample N points between p1 and p2 - algorithmically or via random distribution sampling
-# - Spline from ego position to sampled waypoint, based on constraints
-#
-# Potential areas for improvement:
-# - Submodule: core.py
-#   - Intersection of line and cubic:
-#       - Yet to implement pipeline if numpy throws exception although chances are slim
-#       - If by chance solution gives three real roots, handle them (again very low probability)
-#
-# - Submodule: global_path_handler.py
-#   - Calculating slope of global path
-#       - Current approach: Newton method
-#       - Alternative: Spline through global path and find slope of tanget at point
-#       - If points on global path are close enough this shouldn't be an issue.
+"""
+CORE LOGIC
+==========
+
+INPUTS
+------
+
+- Global path
+- Cubic approximations of track (left and right in form of coefficients)
+- Ego pose (minimum x, y and yaw)
+- Obstacle pose (minimum x, y and yaw)
+
+PIPELINE
+--------
+
+- Find closest point to obstacle in global path
+- Drop perpendicular to global path at the point, the line intersects
+  track boundaries at p1 and p2.
+- Foot of perpendicular from obstacle position to perpendicular is p0.
+
+- For lateral splines
+    - Sample points from line segment between p1 and p0 and p0 and p2
+      with sufficient padding.
+    - Compute cubic spline
+
+- For longitudinal splines
+    - Sample points to forward and backward of the closest point in 
+      global path with sufficient look-ahead indices
+    - Compute cubic spline
+
+"""
 
 __author__ = [
     'Harish Iniyarajan',

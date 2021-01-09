@@ -63,7 +63,6 @@ class GlobalPathHandler(object):
         """
         assert self._loaded
 
-        # TODO: work on splines and tangent for more accuracy maybe?
         for i in range(self._n - 1):
             x1, y1, *_ = self._gp_df.loc[i]
             x2, y2, *_ = self._gp_df.loc[i + 1]

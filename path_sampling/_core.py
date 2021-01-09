@@ -58,7 +58,7 @@ def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom) -> PVector:
         # One real root and two complex roots (conjugates)
         root = roots[real_roots[0][0]].real
     else:
-        # TODO: add logic for three real roots
+        # TODO: add routine for handing three real roots
         _logger.warning('Got three real roots')
         root = roots[real_roots[0][0]].real
 
