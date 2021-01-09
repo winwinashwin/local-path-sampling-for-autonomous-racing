@@ -8,5 +8,5 @@ ignore =
     I201
 per-file-ignores = 
     **/__init__.py:F401
-    visualise.py:I100
+    visualisation/main.py:I100, D103
     path_sampling/spline.py:D208

@@ -26,7 +26,7 @@ PIPELINE
     - Compute cubic spline
 
 - For longitudinal splines
-    - Sample points to forward and backward of the closest point in 
+    - Sample points to forward and backward of the closest point in
       global path with sufficient look-ahead indices
     - Compute cubic spline
 
