@@ -1,12 +1,17 @@
 """Core logic and implementations."""
 
 import logging
+from typing import Callable, Iterable, Tuple
+
 import numpy as np
-from typing import Callable, Tuple, Iterable
-from .types import Line_SI, Pose, PVector
+
+from .types import Line_SI, PVector, Pose
 from .types import RoadLinePolynom  # TODO: Remove in production
 
 _logger = logging.getLogger(__name__)
+
+# Type hints
+ParametricLine = Callable[[float], PVector]
 
 
 def slope_of_segment(point1: PVector, point2: PVector) -> float:
@@ -60,7 +65,7 @@ def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom) -> PVector:
     return PVector(root, line.m * root + line.c)
 
 
-def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0) -> Callable[[float], PVector]:
+def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0) -> ParametricLine:
     """Parametrise all points in a line segment joining points p1 and p2.
 
     Args:
@@ -120,13 +125,9 @@ def cubic_spline(pose1: Pose, pose2: Pose) -> Tuple[np.ndarray, np.ndarray]:
     Args:
         pose1 (Pose): First point (with heading info, hence Pose and not PVector)
         pose2 (Pose): Second point (with heading info, hence Pose and not PVector)
-    
+
     Returns:
         Tuple[numpy.ndarray, numpy.ndarray]: Tuple of x and y coordinates in the spline
-
-    """
-
-    """
 
     To generate cubic spline between two points (x1, y1) and (x2, y2) with heading
     theta1 and theta2 respectively, we use the following 4 conditions.

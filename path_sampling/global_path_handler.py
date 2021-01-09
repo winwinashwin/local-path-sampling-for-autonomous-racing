@@ -2,9 +2,10 @@
 
 import logging
 from collections import deque
+from typing import Iterable, NoReturn
+
 import numpy as np
 import pandas as pd
-from typing import NoReturn, Iterable
 
 from ._core import slope_of_segment
 from .types import Line_SI, PVector, Pose

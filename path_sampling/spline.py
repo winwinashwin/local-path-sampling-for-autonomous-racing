@@ -1,41 +1,42 @@
-import numpy as np
-from collections import deque
+"""Spline generation."""
+
 import logging
+from collections import deque
 from typing import Generator, Tuple
+
+import numpy as np
+
 from ._core import (
     cubic_spline,
     intersection_line_cubic,
     parametrise_lineseg,
 )
-from .types import PVector, Pose, RoadLinePolynom
 from .global_path_handler import GlobalPathHandler
+from .types import PVector, Pose, RoadLinePolynom
 
 _logger = logging.getLogger(__name__)
 
 
+# Type aliases
+PointGenerator = Generator[Tuple[np.ndarray, np.ndarray]]
+
+
 class SplineGenerator(object):
+    """For generating splines."""
 
-
-"""Generate splines."""
-
-   def __init__(self,
-                 gp_handler: GlobalPathHandler,
-                 ego_pose: Pose,
-                 obs_pose: Pose,
-                 road_poly_left: RoadLinePolynom,
-                 road_poly_right: RoadLinePolynom
-                 ):
+    def __init__(self, gp_handler: GlobalPathHandler, ego_pose: Pose, obs_pose: Pose,
+                 road_poly_left: RoadLinePolynom, road_poly_right: RoadLinePolynom):
         """Constructor.
 
-        Args:
-            gp_handler (GlobalPathHandler): Handler for interacting with global path data
-            ego_pose (Pose): Ego vehicle pose
-            obs_pose (Pose): Pose of obstacle
-            road_poly_left (RoadLinePolynom): Structure with cubic approximations of left band of track
-            road_poly_right (RoadLinePolynom): Structure with cubic approximations of right band of track
+            Args:
+                gp_handler (GlobalPathHandler): Handler for interacting with global path data
+                ego_pose (Pose): Ego vehicle pose
+                obs_pose (Pose): Pose of obstacle
+                road_poly_left (RoadLinePolynom): Structure with cubic coeffs of track (left)
+                road_poly_right (RoadLinePolynom): Structure with cubic coeffs of track (right)
 
-        Returns:
-            None
+            Returns:
+                None
 
         """
         self._gp_handler = gp_handler
@@ -56,16 +57,17 @@ class SplineGenerator(object):
             intersection_line_cubic(self._ppd_line, self._coeffs_right)
         )
 
-    def generate_lat(self, n: int, padding: float = 0.04, bias: float = 0.5) -> Generator[Tuple[np.ndarray, np.ndarray]]:
+    def generate_lat(self, n: int, padding: float = 0.04, bias: float = 0.5) -> PointGenerator:
         """Generate lateral splines.
 
         Args:
             n (int): Number of splines to generate
-            padding (float): A number between 0 and 0.25, denoting the extent of padding required from either side
+            padding (float): A number between 0 and 0.25, denoting the extent of padding required
+                             from either side
             bias (float): Percentage of splines to left of obstacle
 
         Returns:
-            Generator[Tuple[np.ndarray, np.ndarray]]: A generator that generates x and y coordinates of spline.
+            PointGenerator: A generator that generates x and y coordinates of spline.
 
         """
         padding = np.clip(padding, 0, 0.25)
@@ -77,8 +79,8 @@ class SplineGenerator(object):
         p1, p2 = self._lat_lims
         m = self._ppd_line.m
 
-        # e0 is the parameter value of the foot of perpendicular from obstacle positon to perpendicular to 
-        # global path at closest point to obstacle
+        # e0 is the parameter value of the foot of perpendicular from obstacle positon to
+        # perpendicular to global path at closest point to obstacle
         e0 = - ((p1.x - self._obs_pose.x) + m * (p1.y - self._obs_pose.y))
         e0 /= (p2.x - p1.x) + m * (p2.y - p1.y)
 
@@ -97,7 +99,7 @@ class SplineGenerator(object):
             pose = Pose(p.x, p.y, yaw=self._ego_pose.yaw)
             yield cubic_spline(self._ego_pose, pose)
 
-    def generate_long(self, n: int, density: float = 1, bias: float = 0.5) -> Generator[Tuple[np.ndarray, np.ndarray]]:
+    def generate_long(self, n: int, density: float = 1, bias: float = 0.5) -> PointGenerator:
         """Generate longitudinal splines.
 
         Args:
@@ -106,7 +108,7 @@ class SplineGenerator(object):
             bias (float): Percentage of splines to forward of obstacle
 
         Returns:
-            Generator[Tuple[np.ndarray, np.ndarray]]: A generator that generates x and y coordinates of spline.
+            PointGenerator: A generator that generates x and y coordinates of spline.
 
         """
         n_fwd = int(n * bias)
