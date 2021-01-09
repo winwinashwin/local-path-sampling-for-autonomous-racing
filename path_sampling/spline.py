@@ -120,6 +120,8 @@ class SplineGenerator(object):
         for i in range(n_rev):
             idx = (self._cls_pt - i - 1) * density
             if idx < 0:
+                msg = f'Not enough points; asked for {n_rev} backward paths, clipping to {len(pts)}'
+                _logger.warning(msg)
                 # if not enough points, generate rest of splines forward to obstacle
                 n_fwd += 1
                 continue
