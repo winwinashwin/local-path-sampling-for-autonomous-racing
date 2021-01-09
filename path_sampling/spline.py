@@ -18,7 +18,7 @@ _logger = logging.getLogger(__name__)
 
 
 # Type aliases
-PointGenerator = Generator[Tuple[np.ndarray, np.ndarray]]
+PointGenerator = Generator[Tuple[np.ndarray, np.ndarray], None, None]
 
 
 class SplineGenerator(object):
