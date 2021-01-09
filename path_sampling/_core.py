@@ -3,46 +3,10 @@
 import logging
 import numpy as np
 
-from .types import Line_SI, PVector
+from .types import Line_SI, Pose, PVector
 from .types import RoadLinePolynom  # TODO: Remove in production
 
 _logger = logging.getLogger(__name__)
-
-
-def linalg_solve(a: np.ndarray, b: np.ndarray):
-    """Solve linear matrix equation of the form AX = B.
-
-    Args:
-        a (numpy.ndarray): Matrix A
-        b (numpy.ndarray): Matrix B
-
-    Returns:
-        numpy.ndarray: solution X
-
-    """
-    try:
-        # Try to solve normally. If A is singular, proceed to find
-        # pseudo inverse of A.
-        #
-        # np.linalg.solve(A, B) does not compute the inverse of A.
-        # Instead it calls one of the gesv LAPACK routines, which
-        # first factorizes A using LU decomposition, then solves
-        # for x using forward and backward substitution
-        #
-        # Finding inverse(A) would incur yet more floating point
-        # operations, and therefore slower performance and more
-        # numerical error.
-
-        x = np.linalg.solve(a, b)
-
-    except np.linalg.LinAlgError:
-        msg = 'Matrix is singular, proceeding with pseudo-inverse instead'
-        _logger.warning(msg)
-
-        a_inv = np.linalg.pinv(a)
-        x = a_inv.dot(b)
-    finally:
-        return x
 
 
 def slope_of_segment(point1: PVector, point2: PVector):
@@ -116,7 +80,7 @@ def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0):
 
     # It is evident that paths generated with epsilon = 0 and epsilon = 1 are infeasible.
     # Hence we introduce some padding on both sides
-    padding = np.clip(padding, 0, 0.5)
+    padding = np.clip(padding, 0, 0.25)
     e1, e2 = padding, 1 - padding
     p1_padded = PVector(p1.x + e1 * (p2.x - p1.x), p1.y + e1 * (p2.y - p1.y))
     p2_padded = PVector(p1.x + e2 * (p2.x - p1.x), p1.y + e2 * (p2.y - p1.y))
@@ -148,3 +112,54 @@ def polyeval(x, coeffs):
     for i, c in enumerate(coeffs):
         y += c * (x ** i)
     return y
+
+
+def cubic_spline(pose1: Pose, pose2: Pose):
+    shift_x = pose2.x - pose1.x
+    shift_y = pose2.y - pose1.y
+
+    tx = shift_x * np.cos(pose1.yaw) - shift_y * np.sin(pose1.yaw)
+    ty = shift_x * np.sin(pose1.yaw) + shift_y * np.cos(pose1.yaw)
+
+    a = np.array([
+        [0, 0, 0, 1],
+        [tx ** 3, tx ** 2, tx, 1],
+        [0, 0, 1, 0],
+        [3 * (tx ** 2), 2 * tx, 1, 0]
+    ])
+    b = np.array([0, ty, 0, np.tan(pose2.yaw - pose1.yaw)])
+
+    # Solve for coefficients
+    try:
+        # Try to solve normally. If A is singular, proceed to find
+        # pseudo inverse of A.
+        #
+        # np.linalg.solve(A, B) does not compute the inverse of A.
+        # Instead it calls one of the gesv LAPACK routines, which
+        # first factorizes A using LU decomposition, then solves
+        # for x using forward and backward substitution
+        #
+        # Finding inverse(A) would incur yet more floating point
+        # operations, and therefore slower performance and more
+        # numerical error.
+
+        coeffs = np.linalg.solve(a, b)
+
+    except np.linalg.LinAlgError:
+        msg = 'Matrix is singular, proceeding with pseudo-inverse instead'
+        _logger.warning(msg)
+
+        a_inv = np.linalg.pinv(a)
+        coeffs = a_inv.dot(b)
+
+    # Generate x coordinates in ego frame for spline
+    xs = np.linspace(0, tx, 1000)
+    # Calculate y for each corresponding x
+    ys = np.array([polyeval(x, coeffs[::-1]) for x in xs])
+
+    # Tranform all points (x, y) in spline back to global frame
+    for i, (x, y) in enumerate(zip(xs, ys)):
+        xs[i] = x * np.cos(pose1.yaw) + y * np.sin(pose1.yaw) + pose1.x
+        ys[i] = y * np.cos(pose1.yaw) - x * np.sin(pose1.yaw) + pose1.y
+
+    return xs, ys

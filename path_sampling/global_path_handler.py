@@ -67,7 +67,6 @@ class GlobalPathHandler(object):
             x2, y2, *_ = self._gp_df.loc[i + 1]
             slope = slope_of_segment(PVector(x1, y1), PVector(x2, y2))
             self._slopes.append(slope)
-        # is this necessary?
         self._slopes.append(self._slopes[-1])
 
     def get_closest_point(self, ego_pose: Pose):
