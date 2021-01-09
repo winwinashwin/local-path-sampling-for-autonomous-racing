@@ -10,7 +10,7 @@ from .types import RoadLinePolynom  # TODO: Remove in production
 
 _logger = logging.getLogger(__name__)
 
-# Type hints
+# Type aliases
 ParametricLine = Callable[[float], PVector]
 
 
