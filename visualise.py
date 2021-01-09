@@ -4,7 +4,6 @@ import json
 import logging
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-import numpy as np
 import pandas as pd
 
 from path_sampling.global_path_handler import GlobalPathHandler
@@ -45,8 +44,8 @@ plt.scatter(df_tl['RightBnd_X'], df_tl['RightBnd_Y'], s=4, color='#505050')
 plt.scatter(df_gp['X'], df_gp['Y'], s=2, color='#cc0000')
 
 plt.gca().add_patch(Rectangle(
-    (ego_pose.x + 0.25, ego_pose.y + 5), 
-    -0.5, -10, 
+    (ego_pose.x + 0.25, ego_pose.y + 5),
+    -0.5, -10,
     facecolor='#000'
 ))
 

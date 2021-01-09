@@ -3,7 +3,7 @@
 import logging
 import numpy as np
 
-from .types import Line_SI, PVector, Pose
+from .types import Line_SI, PVector
 from .types import RoadLinePolynom  # TODO: Remove in production
 
 _logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def slope_of_segment(point1: PVector, point2: PVector):
     """
     if point1.x == point2.x:
         slope = float('inf')
-        _logger.warning("Slope calculation returning `inf`")
+        _logger.warning('Slope calculation returning `inf`')
     else:
         slope = (point2.y - point1.y) / (point2.x - point1.x)
     return slope
@@ -83,14 +83,14 @@ def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom):
     # y = c3 * x**3 + c2 * x**2 + (c1 - m) * x + (c0 - c)
     fx = [coeffs.c3, coeffs.c2, coeffs.c1 - line.m, coeffs.c0 - line.c]
     roots = np.roots(fx)
-    
+
     real_roots = np.where(np.isreal(roots))
     if len(real_roots) == 1:
         # One real root and two complex roots (conjugates)
         root = roots[real_roots[0][0]].real
     else:
         # TODO: add logic for three real roots
-        _logger.warning("Got three real roots")
+        _logger.warning('Got three real roots')
         root = roots[real_roots[0][0]].real
 
     return PVector(root, line.m * root + line.c)

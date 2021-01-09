@@ -1,3 +1,5 @@
+"""Base class representing a spline generator."""
+
 from abc import ABCMeta, abstractmethod
 
 
@@ -10,7 +12,7 @@ class _BaseSpG(metaclass=ABCMeta):
     @abstractmethod
     def generate(self, n):
         pass
-    
+
     @abstractmethod
     def _generate_spline(self, ego_pose, target):
         pass

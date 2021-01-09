@@ -3,8 +3,8 @@ import numpy as np
 from ._base import _BaseSpG
 from .._core import (
     intersection_line_cubic,
-    parametrise_lineseg,
     linalg_solve,
+    parametrise_lineseg,
     polyeval
 )
 
