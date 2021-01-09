@@ -115,9 +115,38 @@ def polyeval(x: float, coeffs: Iterable[float]) -> float:
 
 
 def cubic_spline(pose1: Pose, pose2: Pose) -> Tuple[np.ndarray, np.ndarray]:
+    """Cubic spline through two points.
+
+    Args:
+        pose1 (Pose): First point (with heading info, hence Pose and not PVector)
+        pose2 (Pose): Second point (with heading info, hence Pose and not PVector)
+    
+    Returns:
+        Tuple[numpy.ndarray, numpy.ndarray]: Tuple of x and y coordinates in the spline
+
+    """
+
+    """
+
+    To generate cubic spline between two points (x1, y1) and (x2, y2) with heading
+    theta1 and theta2 respectively, we use the following 4 conditions.
+
+    To simplify compuation, we shift the origin to (x1, y1) and rotate the axes anticlockwise
+    by theta1. Spline in new system is G and new target is (tx, ty).
+
+    1. G(0) = 0
+    2. G(tx) = ty
+    3. G'(0) = 0
+    4. G'(tx) = tan(theta2 - theta1)
+
+    This gives us a linear matrix eqn AX = B with coefficient matrix as unknown
+
+    """
+    # Translation
     shift_x = pose2.x - pose1.x
     shift_y = pose2.y - pose1.y
 
+    # Rotation
     tx = shift_x * np.cos(pose1.yaw) - shift_y * np.sin(pose1.yaw)
     ty = shift_x * np.sin(pose1.yaw) + shift_y * np.cos(pose1.yaw)
 
@@ -152,7 +181,7 @@ def cubic_spline(pose1: Pose, pose2: Pose) -> Tuple[np.ndarray, np.ndarray]:
         a_inv = np.linalg.pinv(a)
         coeffs = a_inv.dot(b)
 
-    # Generate x coordinates in ego frame for spline
+    # Generate x coordinates in current frame
     xs = np.linspace(0, tx, 1000)
     # Calculate y for each corresponding x
     ys = np.array([polyeval(x, coeffs[::-1]) for x in xs])
