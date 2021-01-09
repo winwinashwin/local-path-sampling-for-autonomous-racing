@@ -7,11 +7,9 @@ from matplotlib.patches import Rectangle
 import numpy as np
 import pandas as pd
 
-from path_sampling.core import (
-    gen_spline, intersection_line_cubic, parametrise_lineseg
-)
 from path_sampling.global_path_handler import GlobalPathHandler
 from path_sampling.types import Pose, RoadLinePolynom
+from path_sampling.spline import LateralSpG
 
 
 logging.basicConfig(level=logging.INFO)
@@ -29,19 +27,10 @@ tc_data = json.loads(open(tc_file).read())
 gp_handler = GlobalPathHandler()
 gp_handler.load_from_csv(gp_file)
 
-closest_pt_idx = gp_handler.get_closest_point(ego_pose)
-cls_pt_x, cls_pt_y, *_ = gp_handler.global_path.loc[closest_pt_idx]
-
-ppd_line = gp_handler.get_perpendicular(closest_pt_idx, 20)
-ppd_xs = np.linspace(-299, -305, 1000)
-
 coeff_left = RoadLinePolynom(*tc_data['left'])
 coeff_right = RoadLinePolynom(*tc_data['right'])
 
-p1 = intersection_line_cubic(ppd_line, coeff_left)
-p2 = intersection_line_cubic(ppd_line, coeff_right)
-
-parametric_pt = parametrise_lineseg(p1, p2, padding=0.04)
+spline_gen = LateralSpG(gp_handler)
 
 plt.figure(figsize=(10, 10))
 for spine in plt.gca().spines.values():
@@ -50,7 +39,6 @@ plt.xticks([])
 plt.yticks([])
 plt.xlim(-285, -315)
 plt.ylim(-1810, -2200)
-
 
 plt.scatter(df_tl['LeftBnd_X'], df_tl['LeftBnd_Y'], s=4, color='#505050')
 plt.scatter(df_tl['RightBnd_X'], df_tl['RightBnd_Y'], s=4, color='#505050')
@@ -62,16 +50,7 @@ plt.gca().add_patch(Rectangle(
     facecolor='#000'
 ))
 
-# plt.plot([cls_pt_x], [cls_pt_y], marker='o', markersize=5)
-
-# plt.plot(ppd_xs, [ppd_line.m * x + ppd_line.c for x in ppd_xs])
-
-# plt.plot([p1.x], [p1.y], marker='o', markersize=5)
-# plt.plot([p2.x], [p2.y], marker='o', markersize=5)
-
-for e in np.linspace(0, 1, 10):
-    p = parametric_pt(e)
-    xs, ys = gen_spline(ego_pose, p)
+for xs, ys in spline_gen.generate(10, ego_pose, coeff_left, coeff_right, 20, 0.04):
     plt.plot(xs, ys, color='#4d79ff', linewidth=1, zorder=0)
 
 plt.show()

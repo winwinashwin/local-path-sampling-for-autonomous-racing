@@ -5,7 +5,7 @@ from collections import deque
 import numpy as np
 import pandas as pd
 
-from .core import slope_of_segment
+from ._core import slope_of_segment
 from .types import Line_SI, PVector, Pose
 
 _logger = logging.getLogger(__name__)
