@@ -4,6 +4,7 @@ import logging
 from collections import deque
 import numpy as np
 import pandas as pd
+from typing import NoReturn, Iterable
 
 from ._core import slope_of_segment
 from .types import Line_SI, PVector, Pose
@@ -22,7 +23,7 @@ class GlobalPathHandler(object):
         self._slopes = deque()
         self._loaded = False
 
-    def load_from_csv(self, file: str):
+    def load_from_csv(self, file: str) -> NoReturn:
         """Load global path from a csv file.
 
         Args:
@@ -40,16 +41,16 @@ class GlobalPathHandler(object):
         _logger.debug(f'Loaded global path from: {file}')
 
     @property
-    def global_path(self):
+    def global_path(self) -> pd.core.frame.DataFrame:
         """Global path data as loaded from file."""
         return self._gp_df
 
     @property
-    def slopes(self):
+    def slopes(self) -> Iterable[float]:
         """Slopes at each point in the global path."""
         return self._slopes
 
-    def _calculate_slopes(self):
+    def _calculate_slopes(self) -> NoReturn:
         """Calculate slopes at each point in global path.
 
         Args:
@@ -69,7 +70,7 @@ class GlobalPathHandler(object):
             self._slopes.append(slope)
         self._slopes.append(self._slopes[-1])
 
-    def get_closest_point(self, ego_pose: Pose):
+    def get_closest_point(self, ego_pose: Pose) -> int:
         """Find closet point to ego position in global path.
 
         Args:
@@ -95,7 +96,7 @@ class GlobalPathHandler(object):
                 break
         return min_idx
 
-    def get_perpendicular(self, closest_pt_idx: int, look_ahead: int = 10):
+    def get_perpendicular(self, closest_pt_idx: int, look_ahead: int = 10) -> Line_SI:
         """Find perpendicular to global path at a point.
 
         Args:

@@ -2,14 +2,14 @@
 
 import logging
 import numpy as np
-
+from typing import Callable, Tuple, Iterable
 from .types import Line_SI, Pose, PVector
 from .types import RoadLinePolynom  # TODO: Remove in production
 
 _logger = logging.getLogger(__name__)
 
 
-def slope_of_segment(point1: PVector, point2: PVector):
+def slope_of_segment(point1: PVector, point2: PVector) -> float:
     """Find slope of line segment joining two points.
 
     Args:
@@ -28,7 +28,7 @@ def slope_of_segment(point1: PVector, point2: PVector):
     return slope
 
 
-def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom):
+def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom) -> PVector:
     """Find point of intersection of line and cubic.
 
     Args:
@@ -60,7 +60,7 @@ def intersection_line_cubic(line: Line_SI, coeffs: RoadLinePolynom):
     return PVector(root, line.m * root + line.c)
 
 
-def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0):
+def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0) -> Callable[[float], PVector]:
     """Parametrise all points in a line segment joining points p1 and p2.
 
     Args:
@@ -85,7 +85,7 @@ def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0):
     p1_padded = PVector(p1.x + e1 * (p2.x - p1.x), p1.y + e1 * (p2.y - p1.y))
     p2_padded = PVector(p1.x + e2 * (p2.x - p1.x), p1.y + e2 * (p2.y - p1.y))
 
-    def parametric_point(epsilon):
+    def parametric_point(epsilon: float) -> PVector:
         epsilon = np.clip(epsilon, 0, 1)
 
         x = p1_padded.x + epsilon * (p2_padded.x - p1_padded.x)
@@ -97,12 +97,12 @@ def parametrise_lineseg(p1: PVector, p2: PVector, padding: float = 0.0):
     return parametric_point
 
 
-def polyeval(x, coeffs):
+def polyeval(x: float, coeffs: Iterable[float]) -> float:
     """Evaluate a polynomial at x.
 
     Args:
         x (float): Point x to evaluate at
-        coeffs (numpy.ndarray): coefficients of the polynomial
+        coeffs (Iterable[float]): coefficients of the polynomial
 
     Returns:
         float: Value of polynomial at x.
@@ -114,7 +114,7 @@ def polyeval(x, coeffs):
     return y
 
 
-def cubic_spline(pose1: Pose, pose2: Pose):
+def cubic_spline(pose1: Pose, pose2: Pose) -> Tuple[np.ndarray, np.ndarray]:
     shift_x = pose2.x - pose1.x
     shift_y = pose2.y - pose1.y
 

@@ -1,19 +1,27 @@
 import numpy as np
 from collections import deque
 import logging
-
+from typing import Generator, Tuple
 from ._core import (
     cubic_spline,
     intersection_line_cubic,
     parametrise_lineseg,
 )
-from .types import PVector, Pose
+from .types import PVector, Pose, RoadLinePolynom
+from .global_path_handler import GlobalPathHandler
 
 _logger = logging.getLogger(__name__)
 
+
 class SplineGenerator(object):
 
-    def __init__(self, gp_handler, ego_pose, obs_pose, road_poly_left, road_poly_right):
+    def __init__(self,
+                 gp_handler: GlobalPathHandler,
+                 ego_pose: Pose,
+                 obs_pose: Pose,
+                 road_poly_left: RoadLinePolynom,
+                 road_poly_right: RoadLinePolynom
+                 ):
         self._gp_handler = gp_handler
         self._ego_pose = ego_pose
         self._obs_pose = obs_pose
@@ -29,7 +37,7 @@ class SplineGenerator(object):
             intersection_line_cubic(self._ppd_line, self._coeffs_right)
         )
 
-    def generate_lat(self, n: int, padding=0.04, bias=0.5):
+    def generate_lat(self, n: int, padding: float = 0.04, bias: float = 0.5) -> Generator[Tuple[np.ndarray, np.ndarray]]:
         padding = np.clip(padding, 0, 0.25)
         bias = np.clip(bias, 0, 1)
 
@@ -57,7 +65,7 @@ class SplineGenerator(object):
             pose = Pose(p.x, p.y, yaw=self._ego_pose.yaw)
             yield cubic_spline(self._ego_pose, pose)
 
-    def generate_long(self, n, density=1, bias=0.5):
+    def generate_long(self, n: int, density: float = 1, bias: float = 0.5) -> Generator[Tuple[np.ndarray, np.ndarray]]:
         n_fwd = int(n * bias)
         n_rev = n - n_fwd
 
