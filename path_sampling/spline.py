@@ -57,7 +57,7 @@ class SplineGenerator(object):
             intersection_line_cubic(self._ppd_line, self._coeffs_right)
         )
 
-    def generate_lat(self, n: int, padding: float = 0.04, bias: float = 0.5) -> PointGenerator:
+    def generate_lat(self, n: int, pts_per_spline: int, padding: float = 0.04, bias: float = 0.5) -> PointGenerator:
         """Generate lateral splines.
 
         Args:
@@ -97,9 +97,9 @@ class SplineGenerator(object):
         for e in epsilons:
             p = parametric_pt(e)
             pose = Pose(p.x, p.y, yaw=self._ego_pose.yaw)
-            yield cubic_spline(self._ego_pose, pose)
+            yield cubic_spline(self._ego_pose, pose, pts_per_spline)
 
-    def generate_long(self, n: int, density: float = 1, bias: float = 0.5) -> PointGenerator:
+    def generate_long(self, n: int, pts_per_spline: int, density: float = 1, bias: float = 0.5) -> PointGenerator:
         """Generate longitudinal splines.
 
         Args:
@@ -143,4 +143,4 @@ class SplineGenerator(object):
 
         for p, slope in pts:
             pose = Pose(p.x, p.y, yaw=np.arctan(slope))
-            yield cubic_spline(self._ego_pose, pose)
+            yield cubic_spline(self._ego_pose, pose, pts_per_spline)

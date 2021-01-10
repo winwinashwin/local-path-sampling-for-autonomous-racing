@@ -119,12 +119,13 @@ def polyeval(x: float, coeffs: Iterable[float]) -> float:
     return y
 
 
-def cubic_spline(pose1: Pose, pose2: Pose) -> Tuple[np.ndarray, np.ndarray]:
+def cubic_spline(pose1: Pose, pose2: Pose, n: int) -> Tuple[np.ndarray, np.ndarray]:
     """Cubic spline through two points.
 
     Args:
         pose1 (Pose): First point (with heading info, hence Pose and not PVector)
         pose2 (Pose): Second point (with heading info, hence Pose and not PVector)
+        n (int): Number of points in spline
 
     Returns:
         Tuple[numpy.ndarray, numpy.ndarray]: Tuple of x and y coordinates in the spline
@@ -183,7 +184,7 @@ def cubic_spline(pose1: Pose, pose2: Pose) -> Tuple[np.ndarray, np.ndarray]:
         coeffs = a_inv.dot(b)
 
     # Generate x coordinates in current frame
-    xs = np.linspace(0, tx, 1000)
+    xs = np.linspace(0, tx, n)
     # Calculate y for each corresponding x
     ys = np.array([polyeval(x, coeffs[::-1]) for x in xs])
 
