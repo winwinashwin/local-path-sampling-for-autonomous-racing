@@ -9,4 +9,5 @@ ignore =
 per-file-ignores = 
     **/__init__.py:F401
     visualisation/main.py:I100, D103
+    bench.py:I100, D103
     path_sampling/spline.py:D208
