@@ -119,6 +119,75 @@ def polyeval(x: float, coeffs: Iterable[float]) -> float:
     return y
 
 
+def cubic_spline_opt(pose1: Pose, pose2: Pose, n: int) -> Tuple[np.ndarray, np.ndarray]:
+    """Cubic spline through two points.
+
+    Args:
+        pose1 (Pose): First point (with heading info, hence Pose and not PVector)
+        pose2 (Pose): Second point (with heading info, hence Pose and not PVector)
+        n (int): Number of points in spline
+
+    Returns:
+        Tuple[numpy.ndarray, numpy.ndarray]: Tuple of x and y coordinates in the spline
+
+    To generate cubic spline between two points (x1, y1) and (x2, y2) with heading
+    theta1 and theta2 respectively, we use the following 4 conditions.
+
+    To simplify compuation, we shift the origin to (x1, y1) and rotate the axes anticlockwise
+    by theta1. Spline in new system is G and new target is (tx, ty).
+
+    1. G(0) = 0
+    2. G(tx) = ty
+    3. G'(0) = 0
+    4. G'(tx) = tan(theta2 - theta1)
+
+    Optimisation:
+        - Remove matrix algebra
+        - Conditions 1 and 3 straight away gives us 2 coeffs as zero
+        - Solve for rest two coeffs using plain old system of linear eqns in two variables
+
+    """
+    # Translation
+    shift_x = pose2.x - pose1.x
+    shift_y = pose2.y - pose1.y
+
+    # Rotation
+    tx = shift_x * np.cos(pose1.yaw) - shift_y * np.sin(pose1.yaw)
+    ty = shift_x * np.sin(pose1.yaw) + shift_y * np.cos(pose1.yaw)
+    m = np.tan(pose2.yaw - pose1.yaw)
+    coeffs = np.zeros((4))
+
+    # Solve for coefficients
+    if tx != 0:
+        coeffs[0] = (m * tx - 2 * ty) / np.power(tx, 3)
+        coeffs[1] = (3 * ty - m * tx) / np.power(tx, 2)
+
+        # Generate x coordinates in current frame
+        xs = np.linspace(0, tx, n)
+        # Calculate y for each corresponding x
+        ys = np.array([polyeval(x, coeffs[::-1]) for x in xs])
+
+    else:
+        # tx is 0
+        if ty != 0:
+            msg = 'Cubic spline reducing to line parallel to y-axis in ego-frame'
+            _logger.warning(msg)
+            ys = np.linspace(0, ty, n)
+            xs = np.zeros_like(ys)
+        else:
+            msg = 'Cannot spline through single point'
+            _logger.error(msg)
+            xs = np.zeros((n))
+            ys = np.zeros((n))
+
+    # Tranform all points (x, y) in spline back to global frame
+    for i, (x, y) in enumerate(zip(xs, ys)):
+        xs[i] = x * np.cos(pose1.yaw) + y * np.sin(pose1.yaw) + pose1.x
+        ys[i] = y * np.cos(pose1.yaw) - x * np.sin(pose1.yaw) + pose1.y
+
+    return xs, ys
+
+
 def cubic_spline(pose1: Pose, pose2: Pose, n: int) -> Tuple[np.ndarray, np.ndarray]:
     """Cubic spline through two points.
 
@@ -144,6 +213,8 @@ def cubic_spline(pose1: Pose, pose2: Pose, n: int) -> Tuple[np.ndarray, np.ndarr
     This gives us a linear matrix eqn AX = B with coefficient matrix as unknown
 
     """
+    return cubic_spline_opt(pose1, pose2, n)
+
     # Translation
     shift_x = pose2.x - pose1.x
     shift_y = pose2.y - pose1.y
