@@ -29,7 +29,7 @@ gp_handler.load_from_csv(gp_file)
 coeff_left = RoadLinePolynom(*tc_data['left'])
 coeff_right = RoadLinePolynom(*tc_data['right'])
 
-spline_gen = SplineGenerator(gp_handler, ego_pose, obs_pose, coeff_left, coeff_right)
+spline_gen = SplineGenerator(gp_handler, ego_pose, coeff_left, coeff_right)
 
 
 def main():
@@ -56,10 +56,10 @@ def main():
         facecolor='#000'
     ))
 
-    for xs, ys in spline_gen.generate_lat(100, padding=0.05, bias=0.5, pts_per_spline=100):
+    for xs, ys in spline_gen.generate_lat(100, obs_pose=obs_pose, padding=0.05, bias=0.5, pts_per_spline=100):
         plt.plot(xs, ys, color='#4d79ff', linewidth=1, zorder=0)
 
-    for xs, ys in spline_gen.generate_long(25, density=1, bias=0.8, pts_per_spline=100):
+    for xs, ys in spline_gen.generate_long(25, obs_pose=obs_pose, density=1, bias=0.8, pts_per_spline=100):
         plt.plot(xs, ys, color='#12961A', linewidth=1, zorder=0)
 
     plt.show()
