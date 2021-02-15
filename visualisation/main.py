@@ -13,7 +13,13 @@ from path_sampling.spline import SplineGenerator
 logging.basicConfig(level=logging.INFO)
 
 ego_pose = Pose(-300, -1890, yaw=1.57)
-obs_pose = Pose(-302.54, -1950.3, yaw=0)
+# obs_pose = Pose(-302.54, -1950.3, yaw=0)
+obstacles = [
+    Pose(-302.54, -1950.3, yaw=0),
+    Pose(-305.90, -1921.4, yaw=0),
+    Pose(-297.04, -1984.8, yaw=0),
+    Pose(-303.12, -2019.9, yaw=0),
+]
 
 tl_file = 'testing/data/track_limits.csv'
 gp_file = 'testing/data/global_path.csv'
@@ -50,16 +56,24 @@ def main():
         -0.5, -10,
         facecolor='#000'
     ))
-    plt.gca().add_patch(Rectangle(
-        (obs_pose.x + 0.25, obs_pose.y + 5),
-        -0.5, -10,
-        facecolor='#000'
-    ))
 
-    for xs, ys in spline_gen.generate_lat(100, obs_pose=obs_pose, padding=0.05, bias=0.5, pts_per_spline=100):
+    for obs in obstacles:
+        plt.gca().add_patch(Rectangle(
+            (obs.x + 0.25, obs.y + 5),
+            -0.5, -10,
+            facecolor='#000'
+        ))
+
+    for xs, ys in spline_gen.generate_lat(100, obs_pose=obstacles[0], padding=0.04, bias=0.5, pts_per_spline=100):
+        plt.plot(xs, ys, color='#4d79ff', linewidth=1, zorder=0)
+    for xs, ys in spline_gen.generate_lat(100, obs_pose=obstacles[1], padding=0.04, bias=0.85, pts_per_spline=100):
+        plt.plot(xs, ys, color='#4d79ff', linewidth=1, zorder=0)
+    for xs, ys in spline_gen.generate_lat(100, obs_pose=obstacles[2], padding=0.04, bias=0.15, pts_per_spline=100):
+        plt.plot(xs, ys, color='#4d79ff', linewidth=1, zorder=0)
+    for xs, ys in spline_gen.generate_lat(100, obs_pose=obstacles[3], padding=0.04, bias=0.7, pts_per_spline=100):
         plt.plot(xs, ys, color='#4d79ff', linewidth=1, zorder=0)
 
-    for xs, ys in spline_gen.generate_long(25, obs_pose=obs_pose, density=1, bias=0.8, pts_per_spline=100):
+    for xs, ys in spline_gen.generate_long(30, obs_pose=obstacles[0], density=1, bias=0.8, pts_per_spline=100):
         plt.plot(xs, ys, color='#12961A', linewidth=1, zorder=0)
 
     plt.show()
