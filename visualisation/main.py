@@ -59,7 +59,7 @@ def main():
     for xs, ys in spline_gen.generate_lat(100, padding=0.05, bias=0.5, pts_per_spline=100):
         plt.plot(xs, ys, color='#4d79ff', linewidth=1, zorder=0)
 
-    for xs, ys in spline_gen.generate_long(25, density=1, bias=0.8, pts_per_spline=100):
+    for xs, ys in spline_gen.generate_long(5, delta_start=8, skip=2, bias=1, pts_per_spline=100):
         plt.plot(xs, ys, color='#12961A', linewidth=1, zorder=0)
 
     plt.show()
